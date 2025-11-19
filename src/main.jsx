@@ -5,6 +5,7 @@ import App from './App.jsx'
 import CalmSession from './pages/CalmSession.jsx'
 import Home from './pages/Home.jsx'
 import Log from './pages/Log.jsx'
+import Profile from './pages/Profile.jsx'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'calm', element: <CalmSession /> },
       { path: 'log', element: <Log /> },
+      { path: 'profile', element: <Profile /> },
     ],
   },
 ])

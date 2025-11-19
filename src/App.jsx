@@ -40,6 +40,9 @@ const App = () => (
           <NavLink to="/log" className={navLinkClasses}>
             Log
           </NavLink>
+          <NavLink to="/profile" className={navLinkClasses}>
+            Profile
+          </NavLink>
         </nav>
       </footer>
     </div>

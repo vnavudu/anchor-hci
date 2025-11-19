@@ -1,9 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { addEntry } from '../lib/journalStore'
 
 const Log = () => {
   const [entry, setEntry] = useState('')
   const [status, setStatus] = useState('')
+  const [images, setImages] = useState([])
+  const [audioUrl, setAudioUrl] = useState(null)
+  const mediaRecorderRef = useRef(null)
+  const audioChunksRef = useRef([])
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -13,8 +18,64 @@ const Log = () => {
       return
     }
 
+    // prepare attachments array
+    const attachments = []
+    images.forEach((dataUrl) => attachments.push({ type: 'image', data: dataUrl }))
+    if (audioUrl) attachments.push({ type: 'audio', data: audioUrl })
+
+    addEntry({ date: new Date(), type: 'long', title: entry.split('\n')[0] || 'Journal', attachments })
+
     setStatus('Saved. Your reflection is safe with us.')
     setEntry('')
+    setImages([])
+    setAudioUrl(null)
+  }
+
+  const handleImageChange = async (e) => {
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
+    const promises = files.map((f) => {
+      return new Promise((res) => {
+        const reader = new FileReader()
+        reader.onload = () => res(reader.result)
+        reader.readAsDataURL(f)
+      })
+    })
+    const results = await Promise.all(promises)
+    setImages((prev) => [...prev, ...results])
+  }
+
+  const startRecording = async () => {
+    setStatus('Recording...')
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      mr.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size) audioChunksRef.current.push(ev.data)
+      }
+      mr.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        const reader = new FileReader()
+        reader.onload = () => {
+          setAudioUrl(reader.result)
+          setStatus('Recording saved')
+        }
+        reader.readAsDataURL(blob)
+      }
+      mr.start()
+      mediaRecorderRef.current = mr
+    } catch (err) {
+      setStatus('Unable to access microphone.')
+    }
+  }
+
+  const stopRecording = () => {
+    setStatus('Stopping...')
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop()
+      mediaRecorderRef.current = null
+    }
   }
 
   return (
@@ -40,6 +101,22 @@ const Log = () => {
             placeholder="Write about what you noticed, felt, or want to remember from today..."
             className="min-h-[200px] w-full resize-none rounded-4xl border border-anchor-muted/20 bg-anchor-background/80 p-6 text-base text-anchor-deep outline-none transition-colors duration-200 focus:border-anchor-primary focus:bg-white"
           />
+          <div className="flex flex-col gap-3">
+            <label className="text-sm text-anchor-muted">Add images (optional)</label>
+            <input type="file" accept="image/*" multiple onChange={handleImageChange} />
+            <div className="flex gap-2">
+              {images.map((src, i) => (
+                <img key={i} src={src} alt={`attachment-${i}`} className="h-16 w-16 rounded object-cover" />
+              ))}
+            </div>
+
+            <label className="text-sm text-anchor-muted">Audio (optional)</label>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={startRecording} className="rounded bg-anchor-primary px-3 py-1 text-white">Record</button>
+              <button type="button" onClick={stopRecording} className="rounded bg-white/80 px-3 py-1">Stop</button>
+              {audioUrl && <audio src={audioUrl} controls className="ml-2" />}
+            </div>
+          </div>
           <button
             type="submit"
             className="w-full rounded-[3rem] bg-anchor-primary px-10 py-5 text-sm font-semibold uppercase tracking-[0.3em] text-white shadow-soft transition-transform transition-colors duration-300 ease-smooth hover:-translate-y-1 hover:bg-[#003B8E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-anchor-primary/60"
