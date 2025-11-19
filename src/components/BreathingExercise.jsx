@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 
-const BreathingExercise = ({ onClose }) => {
-  const inhale = 5
-  const hold = 5
-  const exhale = 5
+const BreathingExercise = ({ onClose, phaseSeconds = 5 }) => {
+  const inhale = phaseSeconds
+  const hold = phaseSeconds
+  const exhale = phaseSeconds
   const cycleSeconds = inhale + hold + exhale // 15
-  const dotsCount = inhale // 5 dots representing seconds within a phase
+  const dotsCount = inhale // dots representing seconds within a phase
 
   // track elapsed ms so we can animate within each second
   const [elapsedMs, setElapsedMs] = useState(0)

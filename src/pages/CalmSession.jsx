@@ -238,10 +238,57 @@ const exerciseLibrary = {
 
 const MIN_STEP_SECONDS = 5
 
+function ShortSelector({ onBack, onStart }) {
+  const choices = [5, 4, 3]
+  const [active, setActive] = useState(5)
+  return (
+    <div className="flex w-full flex-col items-center gap-6">
+      <div className="flex w-full flex-col items-center gap-2">
+        <h3 className="text-lg font-semibold text-anchor-deep">Choose pace</h3>
+        <p className="text-sm text-anchor-muted">Pick how many seconds per phase</p>
+      </div>
+
+      <div className="flex gap-3">
+        {choices.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setActive(c)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+              active === c
+                ? 'bg-anchor-primary text-white'
+                : 'bg-white/80 text-anchor-deep'
+            }`}
+          >
+            {c}s
+          </button>
+        ))}
+      </div>
+
+      <div className="flex gap-4">
+        <button
+          type="button"
+          onClick={() => onStart(active)}
+          className="rounded-full bg-anchor-primary px-6 py-2 text-sm font-semibold text-white shadow-soft"
+        >
+          Start
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-full bg-white/80 px-6 py-2 text-sm font-semibold text-anchor-deep shadow-soft"
+        >
+          Back
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const CalmSession = () => {
   const [selected, setSelected] = useState(null)
   const buttonBase =
-    'w-full rounded-[3rem] border border-white/60 bg-white px-8 py-6 text-left shadow-soft transition-all duration-300 ease-smooth focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-anchor-primary/35 hover:-translate-y-1 hover:bg-[#D7E4F3]'
+    'w-full rounded-[3rem] border border-white/60 bg-white px-8 py-6 text-center shadow-soft transition-all duration-300 ease-smooth focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-anchor-primary/35 hover:-translate-y-1 hover:bg-[#D7E4F3]'
 
   return (
     <section className="flex w-full flex-col items-center gap-10 text-center">
@@ -261,27 +308,39 @@ const CalmSession = () => {
         </p>
       </div>
       <div className="w-full max-w-xl space-y-4">
-        {options.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            className={`${buttonBase} ${
-              selected === option.id
-                ? 'border-anchor-primary bg-[#F1F6FD] text-anchor-deep shadow-soft'
-                : 'text-anchor-deep/90'
-            }`}
-            onClick={() => setSelected(option.id)}
-          >
-            <div className="flex flex-col items-start gap-1 text-left">
-              <span className="text-lg font-semibold uppercase tracking-[0.3em] text-anchor-primary">
-                {option.label}
-              </span>
-              <span className="text-sm text-anchor-muted">
-                {option.description}
-              </span>
-            </div>
-          </button>
-        ))}
+        {selected && typeof selected === 'object' && selected.mode === 'short' ? (
+          <BreathingExercise
+            phaseSeconds={selected.secs}
+            onClose={() => setSelected(null)}
+          />
+        ) : selected === 'short' ? (
+          <ShortSelector
+            onBack={() => setSelected(null)}
+            onStart={(secs) => setSelected({ mode: 'short', secs })}
+          />
+        ) : (
+          sessionOptions.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              className={`${buttonBase} ${
+                selected === option.id
+                  ? 'border-anchor-primary bg-[#F1F6FD] text-anchor-deep shadow-soft'
+                  : 'text-anchor-deep/90'
+              }`}
+              onClick={() => setSelected(option.id)}
+            >
+              <div className="flex flex-col items-center gap-1 text-center">
+                <span className="text-lg font-semibold uppercase tracking-[0.3em] text-anchor-primary">
+                  {option.label}
+                </span>
+                <span className="text-sm text-anchor-muted">
+                  {option.description}
+                </span>
+              </div>
+            </button>
+          ))
+        )}
       </div>
       <Link
         to="/"
