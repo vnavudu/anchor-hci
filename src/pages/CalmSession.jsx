@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useId } from 'react'
 import { Link } from 'react-router-dom'
 import BreathingExercise from '../components/BreathingExercise'
+import BoxBreathing from '../components/BoxBreathing'
 
 const sessionOptions = [
   {
@@ -318,6 +319,8 @@ const CalmSession = () => {
             onBack={() => setSelected(null)}
             onStart={(secs) => setSelected({ mode: 'short', secs })}
           />
+        ) : selected === 'medium' ? (
+          <BoxBreathing onClose={() => setSelected(null)} phases={[5, 4, 3, 2, 1]} />
         ) : (
           sessionOptions.map((option) => (
             <button
