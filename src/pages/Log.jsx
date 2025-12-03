@@ -80,7 +80,7 @@ const Log = () => {
 
   return (
     <section className="flex w-full flex-col items-center gap-8 text-center">
-      <div className="w-full max-w-2xl rounded-[3rem] border border-white/70 bg-white p-10 text-left shadow-soft backdrop-blur-sm transition-transform duration-300 ease-smooth hover:-translate-y-0.5">
+      <div className="w-full max-w-2xl rounded-[3.5rem] border border-white/70 bg-white/95 p-10 text-left shadow-soft backdrop-blur-sm transition-transform duration-300 ease-smooth hover:-translate-y-0.5">
         <header className="mb-6">
           <h2 className="text-2xl font-semibold text-anchor-deep sm:text-3xl">
             Create a Log.
@@ -103,17 +103,35 @@ const Log = () => {
           />
           <div className="flex flex-col gap-3">
             <label className="text-sm text-anchor-muted">Add images (optional)</label>
-            <input type="file" accept="image/*" multiple onChange={handleImageChange} />
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="max-w-md rounded-full border border-anchor-muted/25 bg-white/90 px-4 py-2 text-sm text-anchor-deep shadow-soft file:mr-4 file:rounded-full file:border-0 file:bg-anchor-primary/90 file:px-4 file:py-2 file:text-white file:font-semibold file:uppercase file:tracking-[0.2em] hover:file:bg-anchor-primary"
+            />
             <div className="flex gap-2">
               {images.map((src, i) => (
-                <img key={i} src={src} alt={`attachment-${i}`} className="h-16 w-16 rounded object-cover" />
+                <img key={i} src={src} alt={`attachment-${i}`} className="h-16 w-16 rounded-2xl object-cover shadow-soft" />
               ))}
             </div>
 
             <label className="text-sm text-anchor-muted">Audio (optional)</label>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={startRecording} className="rounded bg-anchor-primary px-3 py-1 text-white">Record</button>
-              <button type="button" onClick={stopRecording} className="rounded bg-white/80 px-3 py-1">Stop</button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={startRecording}
+                className="rounded-full bg-anchor-primary/90 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-soft transition-colors duration-200 hover:bg-anchor-primary"
+              >
+                Record
+              </button>
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="rounded-full bg-white/90 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-[#EAF1F8]"
+              >
+                Stop
+              </button>
               {audioUrl && <audio src={audioUrl} controls className="ml-2" />}
             </div>
           </div>
@@ -125,12 +143,12 @@ const Log = () => {
           </button>
         </form>
         {status && <p className="mt-6 text-sm text-anchor-muted">{status}</p>}
-        <div className="mt-8">
+        <div className="mt-8 flex justify-center">
           <Link
             to="/"
-            className="text-xs font-semibold uppercase tracking-[0.3em] text-anchor-muted transition-colors duration-200 hover:text-anchor-deep"
+            className="inline-flex items-center justify-center rounded-full border border-anchor-primary/35 bg-white/95 px-8 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-anchor-primary shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-anchor-primary hover:text-white"
           >
-            Go Back
+            Return Home
           </Link>
         </div>
       </div>

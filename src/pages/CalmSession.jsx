@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState, useId } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { Link } from 'react-router-dom'
-import BreathingExercise from '../components/BreathingExercise'
-import BoxBreathing from '../components/BoxBreathing'
 
 const sessionOptions = [
   {
@@ -237,92 +235,126 @@ const exerciseLibrary = {
   ],
 }
 
-const MIN_STEP_SECONDS = 5
-
-function ShortSelector({ onBack, onStart }) {
-  const choices = [5, 4, 3]
-  const [active, setActive] = useState(5)
-  return (
-    <div className="flex w-full flex-col items-center gap-6">
-      <div className="flex w-full flex-col items-center gap-2">
-        <h3 className="text-lg font-semibold text-anchor-deep">Choose pace</h3>
-        <p className="text-sm text-anchor-muted">Pick how many seconds per phase</p>
-      </div>
-
-      <div className="flex gap-3">
-        {choices.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => setActive(c)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              active === c
-                ? 'bg-anchor-primary text-white'
-                : 'bg-white/80 text-anchor-deep'
-            }`}
-          >
-            {c}s
-          </button>
-        ))}
-      </div>
-
-      <div className="flex gap-4">
-        <button
-          type="button"
-          onClick={() => onStart(active)}
-          className="rounded-full bg-anchor-primary px-6 py-2 text-sm font-semibold text-white shadow-soft"
-        >
-          Start
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-full bg-white/80 px-6 py-2 text-sm font-semibold text-anchor-deep shadow-soft"
-        >
-          Back
-        </button>
-      </div>
-    </div>
-  )
-}
-
 const CalmSession = () => {
   const [selected, setSelected] = useState(null)
+  const [exercise, setExercise] = useState(null)
+  const [phase, setPhase] = useState('choose')
+  const [mode, setMode] = useState('guided')
+  const [sessionDuration, setSessionDuration] = useState(0)
+  const [sessionTimeLeft, setSessionTimeLeft] = useState(0)
+  const [feedbackMessage, setFeedbackMessage] = useState('')
+
+  const handleSelect = (optionId) => {
+    setSelected(optionId)
+    const exercises = exerciseLibrary[optionId] ?? []
+    if (exercises.length) {
+      const randomExercise =
+        exercises[Math.floor(Math.random() * exercises.length)]
+      const duration =
+        randomExercise.totalDurationSeconds ??
+        Math.max(randomExercise.steps.length * 20, 60)
+      setExercise({ ...randomExercise, category: optionId })
+      setMode('guided')
+      setPhase('prepare')
+      setSessionDuration(duration)
+      setSessionTimeLeft(duration)
+      setFeedbackMessage('')
+    }
+  }
+
+  const animationCadence = exercise?.cadenceSeconds ?? 8
+  const isGuidedMode = mode === 'guided'
+
+  const handleModeChange = (value) => {
+    if (!exercise) return
+    setMode(value)
+    setPhase(value === 'guided' ? 'prepare' : 'manual')
+    setSessionTimeLeft(sessionDuration)
+    setFeedbackMessage('')
+  }
+
+  const handleStartGuided = () => {
+    if (!exercise) return
+    setPhase('guide')
+    setSessionTimeLeft(sessionDuration)
+    setFeedbackMessage('')
+  }
+
+  const handleManualComplete = () => {
+    setPhase('reflect')
+  }
+
+  const handleChangeSession = () => {
+    setExercise(null)
+    setPhase('choose')
+    setMode('guided')
+    setSessionTimeLeft(0)
+    setSessionDuration(0)
+    setFeedbackMessage('')
+  }
+
+  const handleRestartExercise = () => {
+    if (!exercise) return
+    setPhase(mode === 'guided' ? 'prepare' : 'manual')
+    setSessionTimeLeft(sessionDuration)
+    setFeedbackMessage('')
+  }
+
+  useEffect(() => {
+    if (phase !== 'guide' || !sessionDuration) return undefined
+    setSessionTimeLeft(sessionDuration)
+    const interval = setInterval(() => {
+      setSessionTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          setPhase('reflect')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [phase, sessionDuration])
+
   const buttonBase =
-    'w-full rounded-[3rem] border border-white/60 bg-white px-8 py-6 text-center shadow-soft transition-all duration-300 ease-smooth focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-anchor-primary/35 hover:-translate-y-1 hover:bg-[#D7E4F3]'
+    'w-full rounded-full bg-white/95 px-12 py-7 text-center text-lg font-semibold tracking-[0.25em] shadow-soft transition-all duration-300 ease-smooth hover:-translate-y-1 hover:bg-[#DDE7F5]'
+  const pairedActionButton =
+    'flex-1 rounded-[2rem] border border-anchor-muted/30 bg-white/92 px-6 py-4 text-sm font-semibold uppercase tracking-[0.28em] text-anchor-deep shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-anchor-primary hover:text-white'
+  const pillToggleBase =
+    'flex-1 rounded-full border border-anchor-muted/25 px-6 py-3.5 text-xs font-semibold uppercase tracking-[0.22em] transition-all duration-200'
 
   return (
-    <section className="flex w-full flex-col items-center gap-10 text-center">
-      <div className="flex w-full flex-col items-center gap-5">
+    <section className="flex w-full flex-col items-center gap-14 text-center">
+      <div className="flex w-full flex-col items-center gap-6">
         <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white text-4xl text-anchor-primary shadow-soft">
           ⚓
           <div className="absolute inset-0 -z-10 rounded-full bg-[#9BBEF8]/30 blur-2xl" />
         </div>
         <h2 className="text-2xl font-semibold text-anchor-deep sm:text-3xl">
-          Let&apos;s get you anchored.
+          {phase === 'choose'
+            ? "Let's get you anchored."
+            : `Ready for your ${exercise?.category ?? ''} session.`}
         </h2>
-        <p className="mx-auto max-w-md text-base text-anchor-muted">
-          How much time do you have, Sally?
-        </p>
-        <p className="mx-auto max-w-xl text-sm text-anchor-muted">
-          Choose the pace that feels right for this moment.
-        </p>
-      </div>
-      <div className="w-full max-w-xl space-y-4">
-        {selected && typeof selected === 'object' && selected.mode === 'short' ? (
-          <BreathingExercise
-            phaseSeconds={selected.secs}
-            onClose={() => setSelected(null)}
-          />
-        ) : selected === 'short' ? (
-          <ShortSelector
-            onBack={() => setSelected(null)}
-            onStart={(secs) => setSelected({ mode: 'short', secs })}
-          />
-        ) : selected === 'medium' ? (
-          <BoxBreathing onClose={() => setSelected(null)} phases={[5, 4, 3, 2, 1]} />
+        {phase === 'choose' ? (
+          <>
+            <p className="mx-auto max-w-md text-base text-anchor-muted">
+              How much time do you have, Sally?
+            </p>
+            <p className="mx-auto max-w-xl text-sm text-anchor-muted">
+              Choose the pace that feels right for this moment.
+            </p>
+          </>
         ) : (
-          sessionOptions.map((option) => (
+          <p className="mx-auto max-w-xl text-sm text-anchor-muted">
+            Switch modes or start when you&apos;re ready. You can always return
+            home.
+          </p>
+        )}
+      </div>
+
+      {phase === 'choose' && (
+        <div className="w-full max-w-xl space-y-4">
+          {sessionOptions.map((option) => (
             <button
               key={option.id}
               type="button"
@@ -331,7 +363,7 @@ const CalmSession = () => {
                   ? 'border-anchor-primary bg-[#F1F6FD] text-anchor-deep shadow-soft'
                   : 'text-anchor-deep/90'
               }`}
-              onClick={() => setSelected(option.id)}
+              onClick={() => handleSelect(option.id)}
             >
               <div className="flex flex-col items-center gap-1 text-center">
                 <span className="text-lg font-semibold uppercase tracking-[0.3em] text-anchor-primary">
@@ -342,12 +374,260 @@ const CalmSession = () => {
                 </span>
               </div>
             </button>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {exercise && phase !== 'choose' && (
+        <div className="w-full max-w-3xl animate-fade-in-up rounded-[3.5rem] bg-transparent p-6 text-left">
+          <div className="flex flex-col gap-5 pb-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EAF1F8] text-3xl shadow-soft">
+                {exercise.icon}
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.35em] text-anchor-muted">
+                  {exercise.category} session
+                </p>
+                <h3 className="text-2xl font-semibold text-anchor-deep">
+                  {exercise.title}
+                </h3>
+                <p className="text-sm text-anchor-muted">{exercise.duration}</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-end gap-3 text-right">
+              <span className="rounded-full bg-[#D7E4F3] px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-anchor-primary shadow-soft">
+                {mode} mode
+              </span>
+              <button
+                type="button"
+                className="text-xs font-semibold uppercase tracking-[0.3em] text-anchor-muted transition-colors duration-200 hover:text-anchor-deep"
+                onClick={handleChangeSession}
+              >
+                change session
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-4">
+            {['guided', 'manual'].map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => handleModeChange(value)}
+                className={`${pillToggleBase} ${
+                  mode === value
+                    ? 'bg-anchor-primary text-white shadow-soft'
+                    : 'bg-white/90 text-anchor-deep'
+                } hover:bg-[#003B8E] hover:text-white`}
+                aria-pressed={mode === value}
+              >
+                {value} mode
+              </button>
+            ))}
+          </div>
+
+          {(phase === 'prepare' || phase === 'manual') && (
+            <div className="mt-8 space-y-6 rounded-[3rem] bg-white/70 p-6 shadow-soft backdrop-blur-sm">
+              <p className="text-base text-anchor-muted">
+                {exercise.description}
+              </p>
+              {isGuidedMode ? (
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <div className="flex flex-col items-center justify-center gap-4 rounded-[3rem] bg-[#F7FAFF] p-6 shadow-soft">
+                    <ExerciseAnimation
+                      type={exercise.animation}
+                      duration={(animationCadence || 8) + 2}
+                    />
+                    <p className="text-center text-sm text-anchor-muted">
+                      Preview how the guided pace will feel. Tap start when you
+                      are ready.
+                    </p>
+                  </div>
+                  <InstructionPill
+                    steps={exercise.steps}
+                    tip={exercise.tip}
+                    label="Full instructions"
+                  />
+                </div>
+              ) : (
+                <InstructionPill
+                  steps={exercise.steps}
+                  tip={exercise.tip}
+                  label="Manual instructions"
+                />
+              )}
+              {isGuidedMode ? (
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    type="button"
+                    onClick={handleStartGuided}
+                    className="flex-1 rounded-[999px] bg-anchor-primary px-10 py-5 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-soft transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#003B8E]"
+                  >
+                    Start guided session
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange('manual')}
+                    className="flex-1 rounded-[999px] bg-white/92 px-10 py-5 text-sm font-semibold uppercase tracking-[0.2em] text-anchor-muted shadow-soft transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#EEF2F8]"
+                  >
+                    I&apos;ll do this manually
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-4">
+                  <button
+                    type="button"
+                    onClick={handleManualComplete}
+                    className="flex-1 rounded-[999px] border border-anchor-muted/30 bg-white/95 px-10 py-5 text-sm font-semibold uppercase tracking-[0.2em] text-anchor-deep shadow-soft transition-transform transition-colors duration-200 hover:-translate-y-0.5 hover:bg-[#003B8E] hover:text-white"
+                  >
+                    I followed the steps
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange('guided')}
+                    className="flex-1 rounded-[999px] border border-anchor-muted/30 bg-white/95 px-10 py-5 text-sm font-semibold uppercase tracking-[0.2em] text-anchor-deep shadow-soft transition-transform transition-colors duration-200 hover:-translate-y-0.5 hover:bg-[#003B8E] hover:text-white"
+                  >
+                    Switch to guided run
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {phase === 'guide' && (
+            <div className="mt-6 space-y-6">
+              <div className="flex flex-col gap-4 rounded-[2.75rem] border border-anchor-muted/15 bg-[#F7FAFF] p-6 text-anchor-deep shadow-soft sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-anchor-muted">
+                    Guided pacing
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-anchor-deep">
+                    Time remaining: {formatTime(sessionTimeLeft)}
+                  </p>
+                  <p className="text-sm text-anchor-muted">
+                    Total session: {formatTime(sessionDuration)}
+                  </p>
+                </div>
+                <div className="w-full max-w-[200px]">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-[#EAF1F8]">
+                    <div
+                      className="h-full rounded-full bg-anchor-primary transition-all duration-700 ease-smooth"
+                      style={{
+                        width: `${
+                          sessionDuration
+                            ? ((sessionDuration - sessionTimeLeft) /
+                                sessionDuration) *
+                              100
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+                <div className="flex flex-col items-center justify-center rounded-[3rem] bg-white/94 p-6 shadow-soft">
+                  <ExerciseAnimation
+                    type={exercise.animation}
+                    duration={(animationCadence || 8) + 2}
+                  />
+                  <p className="mt-4 text-center text-sm text-anchor-muted">
+                    Stay with the visual as it guides your rhythm.
+                  </p>
+                </div>
+                <div className="rounded-[3.25rem] bg-[#F7FAFF] p-7 shadow-soft">
+                  <p className="text-sm font-semibold uppercase tracking-[0.3em] text-anchor-muted">
+                    Full instructions
+                  </p>
+                  <InstructionList steps={exercise.steps} />
+                  <div className="mt-6 flex flex-wrap gap-4">
+                    <button
+                      type="button"
+                      onClick={handleManualComplete}
+                      className="flex-1 rounded-full border border-anchor-muted/25 bg-white/95 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-[#003B8E] hover:text-white"
+                    >
+                      finish early
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhase('prepare')
+                        setSessionTimeLeft(sessionDuration)
+                      }}
+                      className="flex-1 rounded-full border border-anchor-muted/25 bg-white/95 px-6 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-[#003B8E] hover:text-white"
+                    >
+                      pause &amp; view steps
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {phase === 'reflect' && (
+            <div className="mt-6 space-y-5">
+              <div className="rounded-[2.5rem] border border-anchor-muted/20 bg-[#F7FAFF] p-6 text-anchor-deep shadow-[0_18px_40px_-28px_rgba(0,71,171,0.28)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.3em] text-anchor-muted">
+                  Nice work
+                </p>
+                <p className="mt-2 text-xl">
+                  Did this exercise feel supportive for you today?
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  type="button"
+                  className={pairedActionButton}
+                  onClick={() =>
+                    setFeedbackMessage(
+                      "Thanks! We'll remember you loved this vibe for future sessions.",
+                    )
+                  }
+                >
+                  yes, loved it
+                </button>
+                <button
+                  type="button"
+                  className={pairedActionButton}
+                  onClick={() =>
+                    setFeedbackMessage(
+                      "Thanks for sharing. We'll keep tuning recommendations for you.",
+                    )
+                  }
+                >
+                  not really
+                </button>
+              </div>
+              {feedbackMessage && (
+                <p className="rounded-[2rem] bg-[#EAF1F8] px-6 py-3 text-sm text-anchor-deep">
+                  {feedbackMessage}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-4">
+                <button
+                  type="button"
+                  onClick={handleRestartExercise}
+                  className="flex-1 rounded-[2rem] border border-anchor-muted/30 bg-white/95 px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-anchor-primary hover:text-white"
+                >
+                  replay instructions
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exercise && handleSelect(exercise.category)}
+                  className="flex-1 rounded-[2rem] border border-anchor-muted/30 bg-white/95 px-6 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-anchor-primary hover:text-white"
+                >
+                  try another {exercise.category} exercise
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <Link
         to="/"
-        className="text-xs font-semibold uppercase tracking-[0.35em] text-anchor-muted transition-colors duration-200 hover:text-anchor-deep"
+        className="mt-6 inline-flex items-center justify-center rounded-full border border-anchor-primary/35 bg-white/95 px-8 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-anchor-primary shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-anchor-primary hover:text-white"
       >
         return home
       </Link>
@@ -374,7 +654,19 @@ const InstructionList = ({ steps }) => (
   </ul>
 )
 
-export default CalmSession
+const InstructionPill = ({ steps, tip, label }) => (
+  <div className="rounded-[3rem] bg-white/92 p-6 shadow-soft">
+    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-anchor-muted">
+      {label}
+    </p>
+    <div className="mt-4 rounded-[2.5rem] bg-white p-6 text-left shadow-soft">
+      <InstructionList steps={steps} />
+      {tip && (
+        <p className="mt-4 text-xs text-anchor-muted">Why it helps: {tip}</p>
+      )}
+    </div>
+  </div>
+)
 
 const ExerciseAnimation = ({ type, duration = 8 }) => {
   const safeDuration = Math.max(duration, 6)
@@ -729,3 +1021,5 @@ const HorizonAnimation = ({ duration }) => (
     />
   </svg>
 )
+
+export default CalmSession

@@ -14,3 +14,22 @@ body {
 #root {
   @apply min-h-screen;
 }
+
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    @apply rounded-[1.25rem];
+  }
+
+  button {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-anchor-primary focus-visible:ring-opacity-20;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-anchor-primary focus-visible:ring-opacity-15;
+  }
+}

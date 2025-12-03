@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getEntries } from '../lib/journalStore'
 
 function countByType(entries, year, month) {
@@ -50,7 +51,7 @@ function MonthCalendar({ entries, year, month }) {
         {cells.map((c, i) => (
           <div key={i} className="h-10">
             {!c ? null : (
-              <div className={`flex h-10 items-center justify-center rounded ${c.hasEntry ? 'bg-anchor-primary/90 text-white' : 'bg-white/80 text-anchor-deep'}`}>
+              <div className={`flex h-10 items-center justify-center rounded-2xl shadow-soft ${c.hasEntry ? 'bg-anchor-primary/85 text-white' : 'bg-white/90 text-anchor-deep'}`}>
                 {c.d}
               </div>
             )}
@@ -72,45 +73,45 @@ const Profile = () => {
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Profile</h2>
-        <div className="text-sm text-anchor-muted">You</div>
+      <div className="flex items-center justify-between rounded-[2rem] bg-white/70 px-5 py-4 shadow-soft">
+        <h2 className="text-2xl font-semibold text-anchor-deep">Profile</h2>
+        <div className="rounded-full bg-anchor-background/80 px-4 py-2 text-sm font-semibold text-anchor-deep">Sally Smith</div>
       </div>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl bg-white/80 p-4">
+        <div className="rounded-[2rem] border border-white/60 bg-white/85 p-6 shadow-soft">
           <div className="text-sm text-anchor-muted">This month</div>
-          <div className="mt-3 flex gap-3">
-            <div className="rounded p-3 text-center">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="w-full rounded-2xl bg-anchor-background/70 px-4 py-4 text-center shadow-soft">
               <div className="text-xs text-anchor-muted">Grounding</div>
-              <div className="text-lg font-semibold">{byType.short}</div>
+              <div className="text-lg font-semibold text-anchor-deep">{byType.short}</div>
             </div>
-            <div className="rounded p-3 text-center">
+            <div className="w-full rounded-2xl bg-anchor-background/70 px-4 py-4 text-center shadow-soft">
               <div className="text-xs text-anchor-muted">Breathing</div>
-              <div className="text-lg font-semibold">{byType.medium}</div>
+              <div className="text-lg font-semibold text-anchor-deep">{byType.medium}</div>
             </div>
-            <div className="rounded p-3 text-center">
+            <div className="w-full rounded-2xl bg-anchor-background/70 px-4 py-4 text-center shadow-soft">
               <div className="text-xs text-anchor-muted">Journaling</div>
-              <div className="text-lg font-semibold">{byType.long}</div>
+              <div className="text-lg font-semibold text-anchor-deep">{byType.long}</div>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl bg-white/80 p-4">
+        <div className="flex flex-col justify-center rounded-[2rem] border border-white/60 bg-white/85 p-6 shadow-soft">
           <div className="text-sm text-anchor-muted">Journaling streak</div>
-          <div className="mt-3 text-2xl font-semibold">{streak} days</div>
+          <div className="mt-3 rounded-2xl bg-anchor-background/70 px-4 py-3 text-2xl font-semibold text-anchor-deep shadow-soft">{streak} days</div>
         </div>
       </section>
 
-      <section className="mt-6 rounded-xl bg-white/80 p-4">
-        <div className="flex items-center justify-between">
+      <section className="mt-6 rounded-[2.25rem] border border-white/60 bg-white/90 p-6 shadow-soft">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <div className="text-sm text-anchor-muted">Journaling Timeline</div>
             <div className="text-xs text-anchor-deep">{viewDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setMonthOffset((m) => m - 1)} className="rounded bg-white/80 px-3 py-1">Prev</button>
-            <button onClick={() => setMonthOffset((m) => m + 1)} className="rounded bg-white/80 px-3 py-1">Next</button>
+            <button onClick={() => setMonthOffset((m) => m - 1)} className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-[#EAF1F8]">Prev</button>
+            <button onClick={() => setMonthOffset((m) => m + 1)} className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-anchor-deep shadow-soft transition-colors duration-200 hover:bg-[#EAF1F8]">Next</button>
           </div>
         </div>
 
@@ -119,26 +120,37 @@ const Profile = () => {
         </div>
       </section>
 
-      <section className="mt-6 rounded-xl bg-white/80 p-4">
+      <section className="mt-6 rounded-[2.25rem] border border-white/60 bg-white/90 p-6 shadow-soft">
         <div className="text-sm text-anchor-muted">Recent entries</div>
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-4 space-y-3">
           {entries.slice(0, 8).map((e) => (
-            <li key={e.id} className="flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold">{e.title}</div>
-                <div className="text-xs text-anchor-muted">{new Date(e.date).toDateString()} • {e.type}</div>
-                <div className="mt-2 flex gap-2">
-                  {(e.attachments || []).map((a, i) => {
-                    if (a.type === 'image') return <img key={i} src={a.data} className="h-12 w-12 rounded object-cover" />
-                    if (a.type === 'audio') return <audio key={i} src={a.data} controls className="h-12" />
-                    return null
-                  })}
+            <li key={e.id} className="rounded-2xl bg-white/80 px-4 py-3 shadow-soft">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-anchor-deep">{e.title}</div>
+                  <div className="text-xs text-anchor-muted">{new Date(e.date).toDateString()} • {e.type}</div>
+                  <div className="mt-2 flex gap-2">
+                    {(e.attachments || []).map((a, i) => {
+                      if (a.type === 'image') return <img key={i} src={a.data} className="h-12 w-12 rounded-2xl object-cover shadow-soft" />
+                      if (a.type === 'audio') return <audio key={i} src={a.data} controls className="h-12 rounded-2xl bg-white/80 px-2" />
+                      return null
+                    })}
+                  </div>
                 </div>
               </div>
             </li>
           ))}
         </ul>
       </section>
+
+      <div className="mt-8 flex justify-center">
+        <Link
+          to="/"
+          className="inline-flex items-center justify-center rounded-full border border-anchor-primary/35 bg-white/95 px-8 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-anchor-primary shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-anchor-primary hover:text-white"
+        >
+          Return Home
+        </Link>
+      </div>
     </div>
   )
 }
